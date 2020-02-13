@@ -1,5 +1,11 @@
 """
-Usage: build_gradients.py <dconn directory>
+Runs brainspace to build dense gradients from a cifti dense connectome.
+
+Usage: 
+  build_gradients.py <dconn_directory>
+
+Arguments:
+  <dconn_directory>   Path to directory that contains dconn file.
 
 """
 
@@ -33,7 +39,7 @@ def build_gradients(dconn_file):
     dconn_file.close()
     
 if __name__== '__main__':
-    dconn_dir = docopt(__doc__)["dconn directory"]
+    dconn_dir = docopt(__doc__)["<dconn_directory>"]
     dconn_files = glob(os.path.join(dconn_dir, "*.dconn.nii"))
 
     for dconn in dconn_files:
