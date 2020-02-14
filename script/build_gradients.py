@@ -1,7 +1,9 @@
 """
+Runs brainspace to build dense gradients from a cifti dense connectome.
+
 Usage: 
   build_gradients.py <dconn_directory>
-  
+
 Arguments:
   <dconn_directory>   Path to directory that contains dconn file.
 
