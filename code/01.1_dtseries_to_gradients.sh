@@ -1,5 +1,14 @@
 #!/bin/bash
 
+## set up a trap that will clear the ramdisk if it is not cleared
+function cleanup_ramdisk {
+    echo -n "Cleaning up ramdisk directory /$SLURM_TMPDIR/ on "
+    date
+    rm -rf /$SLURM_TMPDIR
+    echo -n "done at "
+    date
+}
+
 # trap the termination signal, and call the function 'trap_term' when
 # that happens, so results may be saved.
 trap "cleanup_ramdisk" TERM
