@@ -122,4 +122,32 @@ source ~/.virtualenvs/gradients/bin/activate
 
 python ~/scratch/build_gradients.py $sub
 
-deactivate
+# get the subject's gradients.txt
+sub_grad_dir=/scratch/a/arisvoin/jjee/gradients_txt/$sub_no
+sub_day1=$(ls $sub_dir | grep REST1)
+sub_day2=$(ls $sub_dir | grep REST2)
+
+# get the subject's dconn
+dconn_dir=/scratch/a/arisvoin/jjee/dconn/$sub_no
+dconn_day1=$(ls $dconn_dir | grep REST1)
+dconn_day2=$(ls $dconn_dir | grep REST2)
+
+# make subject directory to store dscalar.nii
+dscalar_day1_dir=/scratch/a/arisvoin/gradients_dscalar/day1
+mkdir -p $dscalar_day1_dir
+dscalar_day2_dir=/scratch/a/arisvoin/gradients_dscalar/day2
+mkdir -p $dscalar_day2_dir
+
+wb_command -cifti-convert -from-text \
+$sub_grad_dir/$sub_day1 \
+$dconn_dir/$dconn_day1 \
+$dscalar_day1_dir/$sub_no/${sub_grad%%.*}.dscalar.nii
+
+wb_command -cifti-convert -from-text \
+$sub_grad_dir/$sub_day2 \
+$dconn_dir/$dconn_day2 \
+$dscalar_day2_dir/$sub_no/${sub_grad%%.*}.dscalar.nii
+
+
+
+
