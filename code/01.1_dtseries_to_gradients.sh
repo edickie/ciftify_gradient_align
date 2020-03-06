@@ -96,7 +96,7 @@ $LRcombined/$sub_no"_rfMRI_REST2_Atlas_hp2000_clean2sm4.dscalar.nii" \
 rm -rf $separate
 
 # make directory for the subject in the separated folder
-dconn=$tmpdir/home/dconn/$sub_no
+dconn=/scratch/a/arisvoin/jjee/dconn/$sub_no
 mkdir -p $dconn
 
 sub=$LRcombined
@@ -124,8 +124,8 @@ python ~/scratch/build_gradients.py $sub
 
 # get the subject's gradients.txt
 sub_grad_dir=/scratch/a/arisvoin/jjee/gradients_txt/$sub_no
-sub_day1=$(ls $sub_dir | grep REST1)
-sub_day2=$(ls $sub_dir | grep REST2)
+sub_day1=$(ls $sub_grad_dir | grep REST1)
+sub_day2=$(ls $sub_grad_dir | grep REST2)
 
 # get the subject's dconn
 dconn_dir=/scratch/a/arisvoin/jjee/dconn/$sub_no
@@ -133,20 +133,22 @@ dconn_day1=$(ls $dconn_dir | grep REST1)
 dconn_day2=$(ls $dconn_dir | grep REST2)
 
 # make subject directory to store dscalar.nii
-dscalar_day1_dir=/scratch/a/arisvoin/gradients_dscalar/day1
+dscalar_day1_dir=/scratch/a/arisvoin/jjee/gradients_dscalar/day1
 mkdir -p $dscalar_day1_dir
-dscalar_day2_dir=/scratch/a/arisvoin/gradients_dscalar/day2
+dscalar_day2_dir=/scratch/a/arisvoin/jjee/gradients_dscalar/day2
 mkdir -p $dscalar_day2_dir
 
 wb_command -cifti-convert -from-text \
 $sub_grad_dir/$sub_day1 \
 $dconn_dir/$dconn_day1 \
-$dscalar_day1_dir/$sub_no/${sub_grad%%.*}.dscalar.nii
+$dscalar_day1_dir/${sub_day1%%.*}.dscalar.nii \
+-reset-scalars
 
 wb_command -cifti-convert -from-text \
 $sub_grad_dir/$sub_day2 \
 $dconn_dir/$dconn_day2 \
-$dscalar_day2_dir/$sub_no/${sub_grad%%.*}.dscalar.nii
+$dscalar_day2_dir/${sub_day2%%.*}.dscalar.nii \
+-reset-scalars
 
 
 

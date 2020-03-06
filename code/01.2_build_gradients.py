@@ -47,11 +47,16 @@ def build_gradients(sub_file, average_grad):
     gm = GradientMaps(n_components=10, random_state=0)
     gm.fit(dconn.get_data())
     
-    # reorder the gradients
-    out_order, corr_out = compare_embending_to_dense(gm.gradients_, average_grad)
-    gm.gradients_ = reorder_embeddings_to_dense(gm.gradients_, out_order, corr_out, ndim = 6)
+    # check if the shape of the gradients is correct.
+    sub_grad = gm.gradients_
+    if sub_grad.shape[0] < sub_gra.shape[1]:
+        sub_grad = np.transpose(sub_grad)
     
-    return gm.gradients_
+    # reorder the gradients
+    out_order, corr_out = compare_embending_to_dense(sub_grad, average_grad)
+    sub_grad = reorder_embeddings_to_dense(sub_grad, out_order, corr_out, ndim = 10)
+    
+    return sub_grad
     
 def align_to_average(sub_dconn, average_dconn):
     
