@@ -13,7 +13,7 @@ mkdir $tmpdir/home
 dtdir=$tmpdir/home/dtseries/$sub_no
 mkdir -p $dtdir
 
-sub=$1 
+sub=$1
 sub_no=$(basename $sub)
 
 # day 1
@@ -78,16 +78,16 @@ right_d2=$(ls "$sub" | grep "REST2.*_R.func")
 right_d2_roi=$(ls "$sub" | grep "REST2.*_R_roi")
 
 # day 1
-wb_command -cifti-create-dense-scalar \
-$LRcombined/$sub_no"_rfMRI_REST1_Atlas_hp2000_clean2sm4.dscalar.nii" \
+wb_command -cifti-create-dense-timeseries \
+$LRcombined/$sub_no"_rfMRI_REST1_Atlas_hp2000_clean2sm4.dtseries.nii" \
 -left-metric $sub/$left_d1 \
 -roi-left $sub/$left_d1_roi \
 -right-metric $sub/$right_d1 \
 -roi-right $sub/$right_d1_roi
 
 # day 2
-wb_command -cifti-create-dense-scalar \
-$LRcombined/$sub_no"_rfMRI_REST2_Atlas_hp2000_clean2sm4.dscalar.nii" \
+wb_command -cifti-create-dense-timeseries \
+$LRcombined/$sub_no"_rfMRI_REST2_Atlas_hp2000_clean2sm4.dtseries.nii" \
 -left-metric $sub/$left_d2 \
 -roi-left $sub/$left_d2_roi \
 -right-metric $sub/$right_d2 \
@@ -120,7 +120,7 @@ sub=$dconn
 
 source ~/.virtualenvs/gradients/bin/activate
 
-python ~/scratch/build_gradients.py $sub
+python ~/scratch/build_gradients.py $sub /scratch/a/arisvoin/jjee/gradients_txt
 
 # get the subject's gradients.txt
 sub_grad_dir=/scratch/a/arisvoin/jjee/gradients_txt/$sub_no
@@ -138,18 +138,26 @@ mkdir -p $dscalar_day1_dir
 dscalar_day2_dir=/scratch/a/arisvoin/jjee/gradients_dscalar/day2
 mkdir -p $dscalar_day2_dir
 
+dscalar_tmp=$tmpdir/home/dscalar/$sub_no
+mkdir -p $dtdir
+
 wb_command -cifti-convert -from-text \
 $sub_grad_dir/$sub_day1 \
 $dconn_dir/$dconn_day1 \
-$dscalar_day1_dir/${sub_day1%%.*}.dscalar.nii \
+$dscalar_tmp/${sub_day1%%.*}.dscalar.nii \
 -reset-scalars
 
 wb_command -cifti-convert -from-text \
 $sub_grad_dir/$sub_day2 \
 $dconn_dir/$dconn_day2 \
-$dscalar_day2_dir/${sub_day2%%.*}.dscalar.nii \
+$dscalar_tmp/${sub_day2%%.*}.dscalar.nii \
 -reset-scalars
 
+# transpose the rows and columns of dscalar so later tools can read it..
+wb_command -cifti-transpose \
+$dscalar_tmp/${sub_day1%%.*}.dscalar.nii \
+$dscalar_day1_dir/${sub_day1%%.*}.dscalar.nii
 
-
-
+wb_command -cifti-transpose \
+$dscalar_tmp/${sub_day2%%.*}.dscalar.nii \
+$dscalar_day2_dir/${sub_day2%%.*}.dscalar.nii
