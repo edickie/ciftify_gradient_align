@@ -45,7 +45,7 @@ def compare_embending_to_dense(emb, densed_emb):
 
     return out_order, corr_out
 
-def build_gradients(sub_file, average_grad):
+def build_gradients(sub_file, average_grad, is_fisher_Z):
 
     # load the dconn file and compute gradients
     dconn = nib.load(sub_file)
@@ -85,7 +85,7 @@ def align_to_average(sub_dconn, average_dconn):
     return aligned.gradients_
 
 
-def build_and_align(sub_dconn, average_dconn, average_grad, sub_no, output_dir):
+def build_and_align(sub_dconn, average_dconn, average_grad, sub_no, output_dir, is_fisher_Z):
 
     # format name for gradient file
     grad_name = os.path.basename(sub_dconn)
