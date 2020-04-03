@@ -1,9 +1,14 @@
 """
-Usage: 
-  build_gradients.py <dconn_directory>
-  
+Usage:
+  build_gradients.py [options] <dconn_directory> <output_directory>
+
 Arguments:
   <dconn_directory>   Path to directory that contains dconn file.
+  <output_directory>  Path to output directory
+
+Options:
+  --coarse-align reference_dscalar   align to the associated reference file (a dscalar)
+  --is-fisher-Z    Indicates that the input dconn was Fisher Z converted.
 
 """
 
@@ -37,88 +42,102 @@ def compare_embending_to_dense(emb, densed_emb):
         best_match = np.nanargmax(abs(cross_cor))
         out_order[i] = best_match
         corr_out[i] = cross_cor[best_match]
-        
+
     return out_order, corr_out
 
 def build_gradients(sub_file, average_grad):
-    
+
     # load the dconn file and compute gradients
     dconn = nib.load(sub_file)
+    dconn_data = dconn.get_data()
+
+    ## if fisher Z was applied then undo it..
+    if is_fisher_Z:
+        dconn_data = np.tanh(dconn_data)
+
+    ## compute gradients
     gm = GradientMaps(n_components=10, random_state=0)
-    gm.fit(dconn.get_data())
-    
+    gm.fit(dconn_data)
+
     # check if the shape of the gradients is correct.
     sub_grad = gm.gradients_
     if sub_grad.shape[0] < sub_gra.shape[1]:
         sub_grad = np.transpose(sub_grad)
-    
+
     # reorder the gradients
-    out_order, corr_out = compare_embending_to_dense(sub_grad, average_grad)
-    sub_grad = reorder_embeddings_to_dense(sub_grad, out_order, corr_out, ndim = 10)
-    
+    if average_grad:
+        out_order, corr_out = compare_embending_to_dense(sub_grad, average_grad)
+        sub_grad = reorder_embeddings_to_dense(sub_grad, out_order, corr_out, ndim = 10)
+
     return sub_grad
-    
+
 def align_to_average(sub_dconn, average_dconn):
-    
+
     # load the dconn file and compute gradients
     sub_dconn = nib.load(sub_dconn)
-    
+
     # create a GradientMaps object to store the aligned gradients
     aligned = GradientMaps(kernel = "normalized_angle",
                            alignment = "joint")
 
     aligned.fit([average_dconn, sub_dconn])
-    
-    return aligned.gradients_
-    
 
-def build_and_align(sub_dconn, average_dconn, average_grad, sub_no):
-    
+    return aligned.gradients_
+
+
+def build_and_align(sub_dconn, average_dconn, average_grad, sub_no, output_dir):
+
     # format name for gradient file
     grad_name = os.path.basename(sub_dconn)
     grad_name = grad_name.replace(".dconn.nii", "_gradients.txt")
-    grad_name = os.path.join("/scratch/a/arisvoin/jjee/gradients_txt", 
+    grad_name = os.path.join(output_dir,
                              sub_no,
                              grad_name)
-    
+
     # first build subject's gradients
-    sub_grad = build_gradients(sub_dconn, average_grad)
-    
+    sub_grad = build_gradients(sub_dconn, average_grad, is_fisher_Z)
+
     # save as textfile
     np.savetxt(grad_name, sub_grad)
-    
+
     # format appropriate filename for aligned gradients
     # aligned_name = grad_name.replace("_gradients.txt",
                                      # "_gradients_aligned.txt")
-    
+
     # align the subject's gradients to the average gradients
     # aligned_grad = align_to_average(sub_dconn, average_dconn)
-    
+
     # write the aligned gradients as a text file
     # np.savetxt(aligned_name, aligned_grad)
-    
-    
+
+
 if __name__== '__main__':
-    dconn_dir = docopt(__doc__)["<dconn_directory>"]
+    arguments = docopt(__doc__)
+    dconn_dir = arguments["<dconn_directory>"]
+    output_dir = arguments["<output_directory>"]
+    reference_dscalar = arguments['--coarse-align']
+    is_fisher_Z = arguments["--is-fisher-Z"]
+
     dconn_files = glob(os.path.join(dconn_dir, "*.dconn.nii"))
-    
+
     # get subject number
     sub_no = os.path.basename(os.path.normpath(dconn_dir))
-    
-    # read pre-computed average dconn
-    average_dconn = "/scratch/a/arisvoin/jjee/dconn/average/average.dconn.nii"
-    average_dconn = nib.load(average_dconn)
-    
+
+    # # read pre-computed average dconn
+    # average_dconn = "/scratch/a/arisvoin/jjee/dconn/average/average.dconn.nii"
+    # average_dconn = nib.load(average_dconn)
+
     # read pre-computed average gradients
-    average_grad = "/scratch/a/arisvoin/jjee/gradients_txt/average/average_gradients.txt"
-    average_grad = np.loadtxt(average_grad)
-    
+    if reference_dscalar:
+        average_grad = nib.load(reference_dscalar)
+    else:
+        average_grad = None
+
     # create subject subdirectories to store gradients
-    sub_grad_dir = os.path.join("/scratch/a/arisvoin/jjee/gradients_txt/", sub_no)
+    sub_grad_dir = os.path.join(output_dir, sub_no)
     if not os.path.exists(sub_grad_dir):
         os.makedirs(sub_grad_dir)
 
     for dconn in dconn_files:
-        t = Thread(target=build_and_align, args=(dconn, average_dconn, average_grad, sub_no))
+        t = Thread(target=build_and_align, args=(dconn, average_dconn, average_grad, sub_no, output_dir, is_fisher_Z))
         t.start()
-    
