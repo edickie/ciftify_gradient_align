@@ -126,6 +126,7 @@ if __name__== '__main__':
     # # read pre-computed average dconn
     # average_dconn = "/scratch/a/arisvoin/jjee/dconn/average/average.dconn.nii"
     # average_dconn = nib.load(average_dconn)
+    average_dconn = None
 
     # read pre-computed average gradients
     if reference_dscalar:
