@@ -61,7 +61,7 @@ def build_gradients(sub_file, average_grad, is_fisher_Z):
 
     # check if the shape of the gradients is correct.
     sub_grad = gm.gradients_
-    if sub_grad.shape[0] < sub_gra.shape[1]:
+    if sub_grad.shape[0] < sub_grad.shape[1]:
         sub_grad = np.transpose(sub_grad)
 
     # reorder the gradients
