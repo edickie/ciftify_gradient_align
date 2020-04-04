@@ -131,11 +131,11 @@ dconn=/scratch/a/arisvoin/jjee/dconn/$sub_no
 #
 # rm -rf $LRcombined
 # # Build gradients with dconn
-# sub=$dconn
+sub=$dconn
 
 # source ~/.virtualenvs/gradients/bin/activate
 #
-# python ~/scratch/build_gradients.py $sub /scratch/a/arisvoin/edickie/gradients_raw_txt
+python ~/code/ciftify_gradient_align/code/01_build_gradients.py $sub /scratch/a/arisvoin/edickie/gradients_raw_txt
 
 # get the subject's gradients.txt
 sub_grad_dir=/scratch/a/arisvoin/edickie/gradients_raw_txt/$sub_no
@@ -148,9 +148,9 @@ dconn_day1=$(ls $dconn_dir | grep REST1)
 dconn_day2=$(ls $dconn_dir | grep REST2)
 
 # make subject directory to store dscalar.nii
-dscalar_day1_dir=/scratch/a/arisvoin/edickie/gradients_raw_dscalar/day1
+dscalar_day1_dir=/scratch/a/arisvoin/edickie/gradients_raw_dscalar/day1/$sub_no
 mkdir -p $dscalar_day1_dir
-dscalar_day2_dir=/scratch/a/arisvoin/edickie/gradients_raw_dscalar/day2
+dscalar_day2_dir=/scratch/a/arisvoin/edickie/gradients_raw_dscalar/day2/$sub_no
 mkdir -p $dscalar_day2_dir
 
 dscalar_tmp=$tmpdir/home/dscalar/$sub_no
