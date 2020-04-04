@@ -7,19 +7,19 @@ Arguments:
   <output_directory>  Path to output directory
 
 Options:
-  --coarse-align reference_dscalar   align to the associated reference file (a dscalar)
+  --procustes-align reference_dscalar  align to the associated reference file (a dscalar)
   --is-fisher-Z    Indicates that the input dconn was Fisher Z converted.
 
 """
 
 from brainspace.gradient import GradientMaps
+from brainspace.gradient.alignment import procrustes
 import os
 import numpy as np
 from docopt import docopt
 from glob import glob
 from threading import Thread
 import nibabel as nib
-
 
 
 def reorder_embeddings_to_dense(emb, out_order, corr_out, ndim = 6):
@@ -45,11 +45,21 @@ def compare_embending_to_dense(emb, densed_emb):
 
     return out_order, corr_out
 
-def build_gradients(sub_file, average_grad, is_fisher_Z):
+def procustes_alignment(sub_grad, average_grad):
+    '''runs BrainSpace's procrustes alignment'''
+
+    # note that procrustes input/output is transposed
+    pro_aligned = procrustes(source = np.transpose(sub_grad),
+                             target=np.transpose(average_grad))
+
+    return np.transpose(pro_aligned)
+
+
+def build_gradients(sub_file, is_fisher_Z):
 
     # load the dconn file and compute gradients
     dconn = nib.load(sub_file)
-    dconn_data = dconn.get_data()
+    dconn_data = dconn.get_fdata()
 
     ## if fisher Z was applied then undo it..
     if is_fisher_Z:
@@ -63,11 +73,6 @@ def build_gradients(sub_file, average_grad, is_fisher_Z):
     sub_grad = gm.gradients_
     if sub_grad.shape[0] < sub_gra.shape[1]:
         sub_grad = np.transpose(sub_grad)
-
-    # reorder the gradients
-    if average_grad:
-        out_order, corr_out = compare_embending_to_dense(sub_grad, average_grad)
-        sub_grad = reorder_embeddings_to_dense(sub_grad, out_order, corr_out, ndim = 10)
 
     return sub_grad
 
@@ -89,16 +94,22 @@ def build_and_align(sub_dconn, average_dconn, average_grad, sub_no, output_dir, 
 
     # format name for gradient file
     grad_name = os.path.basename(sub_dconn)
-    grad_name = grad_name.replace(".dconn.nii", "_gradients.txt")
+    grad_name = grad_name.replace(".dconn.nii", "_gradients_orig.txt")
     grad_name = os.path.join(output_dir,
                              sub_no,
                              grad_name)
 
     # first build subject's gradients
-    sub_grad = build_gradients(sub_dconn, average_grad, is_fisher_Z)
+    sub_grad = build_gradients(sub_dconn, is_fisher_Z)
 
     # save as textfile
     np.savetxt(grad_name, sub_grad)
+
+    # reorder the gradients
+    if average_grad:
+        pro_aligned = procustes_alignment(sub_grad, average_grad)
+        pro_name = grad_name.replace("_gradients_orig.txt", "_gradients_proc.txt")
+        np.savetxt(pro_name, pro_aligned)
 
     # format appropriate filename for aligned gradients
     # aligned_name = grad_name.replace("_gradients.txt",
@@ -130,7 +141,7 @@ if __name__== '__main__':
 
     # read pre-computed average gradients
     if reference_dscalar:
-        average_grad = nib.load(reference_dscalar)
+        average_grad = nib.load(reference_dscalar).get_fdata()
     else:
         average_grad = None
 
