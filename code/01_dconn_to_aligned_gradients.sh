@@ -62,8 +62,8 @@ python ~/code/ciftify_gradient_align/code/01_build_gradients.py \
    --procustes-align ${average_gradients_dscalar} \
    $sub ${gradients_txt_out}
 
-_gradients_orig.txt
-_gradients_proc.txt
+# _gradients_orig.txt
+# _gradients_proc.txt
 
 # get the subject's gradients.txt
 sub_grad_dir=${gradients_txt_out}/$sub_no
