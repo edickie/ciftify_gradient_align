@@ -49,8 +49,12 @@ def procustes_alignment(sub_grad, average_grad):
     '''runs BrainSpace's procrustes alignment'''
 
     # note that procrustes input/output is transposed
-    pro_aligned = procrustes(source = np.transpose(sub_grad),
-                             target=np.transpose(average_grad))
+    # source : 2D ndarray, shape = (n_samples, n_feat)
+    print("Ready to align")
+    print("Source shape {}".format(sub_grad.shape))
+    print("Target shape {}".format(average_grad.shape))
+    pro_aligned = procrustes(source = sub_grad,
+                             target= average_grad)
 
     return np.transpose(pro_aligned)
 
@@ -64,7 +68,8 @@ def build_gradients(sub_file, is_fisher_Z):
     ## if fisher Z was applied then undo it..
     if is_fisher_Z:
         dconn_data = np.tanh(dconn_data)
-
+    
+    print("Calculating gradients")
     ## compute gradients
     gm = GradientMaps(n_components=10, random_state=0)
     gm.fit(dconn_data)
@@ -106,8 +111,10 @@ def build_and_align(sub_dconn, average_dconn, average_grad, sub_no, output_dir, 
     np.savetxt(grad_name, sub_grad)
 
     # reorder the gradients
-    if average_grad:
+    if average_grad is not None:
         pro_aligned = procustes_alignment(sub_grad, average_grad)
+        if pro_aligned.shape[0] < pro_aligned.shape[1]:
+            pro_aligned = np.transpose(pro_aligned)
         pro_name = grad_name.replace("_gradients_orig.txt", "_gradients_proc.txt")
         np.savetxt(pro_name, pro_aligned)
 
@@ -126,7 +133,7 @@ if __name__== '__main__':
     arguments = docopt(__doc__)
     dconn_dir = arguments["<dconn_directory>"]
     output_dir = arguments["<output_directory>"]
-    reference_dscalar = arguments['--coarse-align']
+    reference_dscalar = arguments['--procustes-align']
     is_fisher_Z = arguments["--is-fisher-Z"]
 
     dconn_files = glob(os.path.join(dconn_dir, "*.dconn.nii"))
@@ -142,6 +149,7 @@ if __name__== '__main__':
     # read pre-computed average gradients
     if reference_dscalar:
         average_grad = nib.load(reference_dscalar).get_fdata()
+        average_grad = np.transpose(average_grad) ## procrutes takes transposed version
     else:
         average_grad = None
 
@@ -151,5 +159,6 @@ if __name__== '__main__':
         os.makedirs(sub_grad_dir)
 
     for dconn in dconn_files:
-        t = Thread(target=build_and_align, args=(dconn, average_dconn, average_grad, sub_no, output_dir, is_fisher_Z))
-        t.start()
+#         t = Thread(target=build_and_align, args=(dconn, average_dconn, average_grad, sub_no, output_dir, is_fisher_Z))
+#         t.start()
+          build_and_align(dconn, average_dconn, average_grad, sub_no, output_dir, is_fisher_Z)
