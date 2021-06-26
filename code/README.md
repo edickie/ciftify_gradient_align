@@ -69,7 +69,7 @@ done
 /scratch/a/arisvoin/edickie/hcp_gradients_20200404/gradients_dscalar//day1/211114/211114_rfMRI_REST1_Atlas_hp2000_clean2sm4_gradients_proc.dscalar.nii does not exist
 /scratch/a/arisvoin/edickie/hcp_gradients_20200404/gradients_dscalar//day2/200008/200008_rfMRI_REST2_Atlas_hp2000_clean2sm4_gradients_proc.dscalar.nii does not exist
 
-therefore exclude "213017 201111 204218 211114 200008" from final analysis for now.
+therefore exclude "213017 201111 204218 211114 200008 214524" from final analysis for now.
 
 ```sh
 subjects=$(cat ${HOME}/code/chitah/subject_lists/HCP_unrelated_REST_sample?.txt | grep -v 213017 | grep -v 201111 | grep -v 204218 | grep -v 211114 | grep -v 200008 | grep -v 214524)
